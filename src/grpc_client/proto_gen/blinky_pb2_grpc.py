@@ -41,6 +41,11 @@ class BlinkServiceStub(object):
                 request_serializer=proto__gen_dot_blinky__pb2.SetLEDRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.IsOn = channel.unary_unary(
+                '/BlinkService/IsOn',
+                request_serializer=proto__gen_dot_blinky__pb2.IsOnRequest.SerializeToString,
+                response_deserializer=proto__gen_dot_blinky__pb2.IsOnResponse.FromString,
+                _registered_method=True)
 
 
 class BlinkServiceServicer(object):
@@ -54,6 +59,12 @@ class BlinkServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def IsOn(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BlinkServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -61,6 +72,11 @@ def add_BlinkServiceServicer_to_server(servicer, server):
                     servicer.SetLED,
                     request_deserializer=proto__gen_dot_blinky__pb2.SetLEDRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'IsOn': grpc.unary_unary_rpc_method_handler(
+                    servicer.IsOn,
+                    request_deserializer=proto__gen_dot_blinky__pb2.IsOnRequest.FromString,
+                    response_serializer=proto__gen_dot_blinky__pb2.IsOnResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -91,6 +107,33 @@ class BlinkService(object):
             '/BlinkService/SetLED',
             proto__gen_dot_blinky__pb2.SetLEDRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IsOn(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/BlinkService/IsOn',
+            proto__gen_dot_blinky__pb2.IsOnRequest.SerializeToString,
+            proto__gen_dot_blinky__pb2.IsOnResponse.FromString,
             options,
             channel_credentials,
             insecure,

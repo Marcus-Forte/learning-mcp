@@ -12,3 +12,15 @@ class SetLEDRequest(_message.Message):
     line: int
     on: bool
     def __init__(self, line: _Optional[int] = ..., on: bool = ...) -> None: ...
+
+class IsOnRequest(_message.Message):
+    __slots__ = ("line",)
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    line: int
+    def __init__(self, line: _Optional[int] = ...) -> None: ...
+
+class IsOnResponse(_message.Message):
+    __slots__ = ("is_on",)
+    IS_ON_FIELD_NUMBER: _ClassVar[int]
+    is_on: bool
+    def __init__(self, is_on: bool = ...) -> None: ...

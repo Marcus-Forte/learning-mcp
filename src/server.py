@@ -14,9 +14,13 @@ async def main():
     blinky_client = BlinkyClient()
 
     @mcp.tool()
-    def turn_led_on(line:int, on:bool):
+    def turn_led_on(line:int, on:bool)-> str:
         blinky_client.SetLedOn(line, on)
-        return 0 # TODO errors are being thrown
+        return "Success"
+    
+    @mcp.tool()
+    def is_led_on(line: int) -> bool:
+        return blinky_client.IsLedOn(line)
 
     # Add an addition tool
     @mcp.tool()
@@ -31,7 +35,7 @@ async def main():
             "version": "0.1"
         }
     
-    # This particular resource tempalte hasn't been working with agents.
+    # This particular resource template hasn't been working with agents.
     @mcp.resource("file://{filename}/")
     async def read_resource_file(filename) -> str:
         print("Get file!")

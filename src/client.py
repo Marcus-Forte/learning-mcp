@@ -5,7 +5,6 @@ from mcp_use import MCPAgent, MCPClient
 from fastmcp import Client
 import argparse
 from dotenv import load_dotenv
-import os
 
 async def main():
     

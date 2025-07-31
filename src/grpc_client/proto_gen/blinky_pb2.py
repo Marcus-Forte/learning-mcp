@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16proto_gen/blinky.proto\x1a\x1bgoogle/protobuf/empty.proto\")\n\rSetLEDRequest\x12\x0c\n\x04line\x18\x01 \x01(\x05\x12\n\n\x02on\x18\x02 \x01(\x08\x32@\n\x0c\x42linkService\x12\x30\n\x06SetLED\x12\x0e.SetLEDRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16proto_gen/blinky.proto\x1a\x1bgoogle/protobuf/empty.proto\")\n\rSetLEDRequest\x12\x0c\n\x04line\x18\x01 \x01(\x05\x12\n\n\x02on\x18\x02 \x01(\x08\"\x1b\n\x0bIsOnRequest\x12\x0c\n\x04line\x18\x01 \x01(\x05\"\x1d\n\x0cIsOnResponse\x12\r\n\x05is_on\x18\x01 \x01(\x08\x32\x65\n\x0c\x42linkService\x12\x30\n\x06SetLED\x12\x0e.SetLEDRequest\x1a\x16.google.protobuf.Empty\x12#\n\x04IsOn\x12\x0c.IsOnRequest\x1a\r.IsOnResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,6 +34,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_SETLEDREQUEST']._serialized_start=55
   _globals['_SETLEDREQUEST']._serialized_end=96
-  _globals['_BLINKSERVICE']._serialized_start=98
-  _globals['_BLINKSERVICE']._serialized_end=162
+  _globals['_ISONREQUEST']._serialized_start=98
+  _globals['_ISONREQUEST']._serialized_end=125
+  _globals['_ISONRESPONSE']._serialized_start=127
+  _globals['_ISONRESPONSE']._serialized_end=156
+  _globals['_BLINKSERVICE']._serialized_start=158
+  _globals['_BLINKSERVICE']._serialized_end=259
 # @@protoc_insertion_point(module_scope)

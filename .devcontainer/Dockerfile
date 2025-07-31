@@ -8,4 +8,4 @@ COPY requirements.txt /tmp/requirements.txt
 
 RUN python3 -m venv /opt/venv && \
     . /opt/venv/bin/activate && \
-    pip3 install -r /tmp/requirements.txt
+    pip install -r /tmp/requirements.txt

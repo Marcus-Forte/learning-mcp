@@ -8,8 +8,17 @@ message SetLEDRequest {
     bool on = 2;
 }
 
+message IsOnRequest {
+    int32 line = 1; // Gpio Line
+}
+
+message IsOnResponse {
+    bool is_on = 1; // Indicates if the LED is on
+}
+
 // The BlinkService defines the RPC for controlling an LED.
 service BlinkService {
     // Sets the LED state.
     rpc SetLED(SetLEDRequest) returns (google.protobuf.Empty);
+    rpc IsOn (IsOnRequest) returns (IsOnResponse);
 }
