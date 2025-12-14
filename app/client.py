@@ -41,9 +41,7 @@ async def main():
     if parsed_args.llm == "ollama":
         print("Using Ollama LLM. Make sure Ollama server is running (ollama serve).")
         llm = ChatOllama(
-            model=parsed_args.ollama_model,
-            base_url="http://localhost:11434",
-            reasoning=False
+            model=parsed_args.ollama_model, base_url="http://localhost:11434", reasoning=False
         )
         # llm.extract_reasoning = True  # Remove thinking
     elif parsed_args.llm == "google":

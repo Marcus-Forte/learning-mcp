@@ -10,6 +10,7 @@ from proto_gen.sensor_pb2 import AdcDataRequest
 from enum import Enum
 import grpc
 
+
 class RobotDirection(Enum):
     FORWARD = 0
     BACKWARD = 1
@@ -24,9 +25,9 @@ async def main():
     robot_stub = RobotControlStub(channel)
 
     sensor_channel = grpc.insecure_channel("192.168.3.251:50054")
-    sensor_stub = SensorServiceStub(sensor_channel) 
+    sensor_stub = SensorServiceStub(sensor_channel)
 
-     # Test Move
+    # Test Move
     # robot_stub.Move(MoveRequest(direction=MoveDirection.MOVE_FORWARD, duration=1.0))
 
     @mcp.tool()
@@ -44,7 +45,7 @@ async def main():
                 raise ValueError("Invalid direction")
 
         print(f"Moving robot {direction} for {duration} seconds")
-        request = MoveRequest(direction= direction, duration=duration)
+        request = MoveRequest(direction=direction, duration=duration)
         robot_stub.Move(request)
         return "Success"
 
