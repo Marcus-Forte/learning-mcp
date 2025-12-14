@@ -35,21 +35,22 @@ async def main():
     # Call load_dotenv() to load the environment variables from the .env file
     load_dotenv()
 
-    mcp_use.set_debug(0)
+    mcp_use.set_debug(1)
 
     parsed_args = args.parse_args()
     if parsed_args.llm == "ollama":
         print("Using Ollama LLM. Make sure Ollama server is running (ollama serve).")
         llm = ChatOllama(
             model=parsed_args.ollama_model,
-            base_url="http://192.168.3.231:11434",
+            base_url="http://localhost:11434",
+            reasoning=False
         )
-        llm.extract_reasoning = True  # Remove thinking
+        # llm.extract_reasoning = True  # Remove thinking
     elif parsed_args.llm == "google":
         print(
             "Using Google Generative AI. Make sure you have set up the environment variables for Google API."
         )
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite")
     elif parsed_args.llm == "openai":
         llm = ChatOpenAI(model="o4-mini")
     else:
@@ -65,6 +66,7 @@ async def main():
         max_steps=20,
         system_prompt="You are an helpful, but angry AI assistant"
         "Use the tools provided to interact with the hardware, but do not be limited by them."
+        "No need to check if LED is on or off, just turn it on or off."
         "Reply in the languagu`e the user requests.",
     )
 
@@ -88,17 +90,8 @@ async def main():
 
             # Surely there is a better way to process outputs?
             try:
-                async for chunk in agent.astream(user_input):
-                    if (
-                        "data" in chunk
-                        and "output" in chunk["data"]
-                        and "output" in chunk["data"]["output"]
-                    ):
-                        print(
-                            chunk["data"]["output"]["output"],
-                            end="\n",
-                            flush=True,
-                        )
+                result = await agent.run(user_input)
+                print(result)
             except Exception as e:
                 print(f"Error during agent run: {e}")
 

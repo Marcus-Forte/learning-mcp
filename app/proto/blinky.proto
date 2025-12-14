@@ -1,10 +1,11 @@
+// Led control https://github.com/Marcus-Forte/rpi-grpc-led
 syntax = "proto3";
 import "google/protobuf/empty.proto";
 
 // Request message for setting the LED.
 message SetLEDRequest {
     
-    int32 line = 1; // Gpio Line 
+    int32 line = 1; // Gpio Line
     bool on = 2;
 }
 

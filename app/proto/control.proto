@@ -1,0 +1,33 @@
+// robot control https://github.com/Marcus-Forte/grpc-robot
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+
+enum MoveDirection {
+  MOVE_FORWARD = 0;
+  MOVE_BACKWARD = 1;
+  MOVE_LEFT = 2;
+  MOVE_RIGHT = 3;
+}
+
+message MoveRequest {
+  MoveDirection direction = 1;
+  float duration = 2;
+}
+
+// Define the service for streaming keyboard input
+service RobotControl {
+  // Client Streaming RPC: The client streams KeyInput messages, 
+  rpc SendKeyboardStream(stream KeyInput) returns (google.protobuf.Empty);
+
+
+  // Unary RPC: The client sends a MoveRequest. Asyhcronously moves the robot.
+  rpc Move(MoveRequest) returns (google.protobuf.Empty);
+}
+
+// Message representing a single unit of keyboard input (e.g., a character)
+message KeyInput {
+  // The actual character or key value pressed
+  string key_value = 1;
+}

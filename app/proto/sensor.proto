@@ -1,0 +1,62 @@
+// https://github.com/Marcus-Forte/msensor-library
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+package sensors;
+
+message Point3 {
+    float x=1;
+    float y=2;
+    float z=3;
+    optional float r=4;
+    optional float g=5;
+    optional float b=6;
+    optional uint32 intensity=7;
+}
+
+message PointCloud3 { 
+    repeated Point3 points = 1;
+    optional uint64 timestamp = 2;
+}
+
+message IMUData {
+    float ax = 1;
+    float ay = 2;
+    float az = 3;
+    float gx = 4;
+    float gy = 5;
+    float gz = 6;
+    optional uint64 timestamp = 7;
+}
+
+message AdcDataRequest {
+    optional uint32 channel = 1;
+}
+
+message AdcData {
+    float sample = 1;
+    optional uint64 timestamp = 2;
+}
+
+message RecordingEntry {
+    oneof entry {
+     PointCloud3 scan = 1;
+     IMUData imu = 2;
+    }    
+}
+
+message saveFileRequest {
+    optional string filename = 1;
+}
+
+message SensorStreamRequest {
+    optional uint32 queue_size = 1;
+}
+
+service SensorService {
+    rpc getScan(SensorStreamRequest) returns (stream PointCloud3);
+    rpc getImu(SensorStreamRequest) returns (stream IMUData);
+    rpc GetAdc(AdcDataRequest) returns (AdcData);
+    
+    rpc savePLYScan(saveFileRequest) returns (google.protobuf.Empty);
+}

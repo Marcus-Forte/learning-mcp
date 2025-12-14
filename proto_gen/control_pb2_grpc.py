@@ -4,9 +4,9 @@ import grpc
 import warnings
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
-from proto_gen import blinky_pb2 as proto__gen_dot_blinky__pb2
+from proto_gen import control_pb2 as proto__gen_dot_control__pb2
 
-GRPC_GENERATED_VERSION = '1.74.0'
+GRPC_GENERATED_VERSION = '1.73.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -19,15 +19,15 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in proto_gen/blinky_pb2_grpc.py depends on'
+        + f' but the generated code in proto_gen/control_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class BlinkServiceStub(object):
-    """The BlinkService defines the RPC for controlling an LED.
+class RobotControlStub(object):
+    """Define the service for streaming keyboard input
     """
 
     def __init__(self, channel):
@@ -36,62 +36,63 @@ class BlinkServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.SetLED = channel.unary_unary(
-                '/BlinkService/SetLED',
-                request_serializer=proto__gen_dot_blinky__pb2.SetLEDRequest.SerializeToString,
+        self.SendKeyboardStream = channel.stream_unary(
+                '/RobotControl/SendKeyboardStream',
+                request_serializer=proto__gen_dot_control__pb2.KeyInput.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.IsOn = channel.unary_unary(
-                '/BlinkService/IsOn',
-                request_serializer=proto__gen_dot_blinky__pb2.IsOnRequest.SerializeToString,
-                response_deserializer=proto__gen_dot_blinky__pb2.IsOnResponse.FromString,
+        self.Move = channel.unary_unary(
+                '/RobotControl/Move',
+                request_serializer=proto__gen_dot_control__pb2.MoveRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
 
 
-class BlinkServiceServicer(object):
-    """The BlinkService defines the RPC for controlling an LED.
+class RobotControlServicer(object):
+    """Define the service for streaming keyboard input
     """
 
-    def SetLED(self, request, context):
-        """Sets the LED state.
+    def SendKeyboardStream(self, request_iterator, context):
+        """Client Streaming RPC: The client streams KeyInput messages, 
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def IsOn(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def Move(self, request, context):
+        """Unary RPC: The client sends a MoveRequest. Asyhcronously moves the robot.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_BlinkServiceServicer_to_server(servicer, server):
+def add_RobotControlServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SetLED': grpc.unary_unary_rpc_method_handler(
-                    servicer.SetLED,
-                    request_deserializer=proto__gen_dot_blinky__pb2.SetLEDRequest.FromString,
+            'SendKeyboardStream': grpc.stream_unary_rpc_method_handler(
+                    servicer.SendKeyboardStream,
+                    request_deserializer=proto__gen_dot_control__pb2.KeyInput.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'IsOn': grpc.unary_unary_rpc_method_handler(
-                    servicer.IsOn,
-                    request_deserializer=proto__gen_dot_blinky__pb2.IsOnRequest.FromString,
-                    response_serializer=proto__gen_dot_blinky__pb2.IsOnResponse.SerializeToString,
+            'Move': grpc.unary_unary_rpc_method_handler(
+                    servicer.Move,
+                    request_deserializer=proto__gen_dot_control__pb2.MoveRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'BlinkService', rpc_method_handlers)
+            'RobotControl', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('BlinkService', rpc_method_handlers)
+    server.add_registered_method_handlers('RobotControl', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class BlinkService(object):
-    """The BlinkService defines the RPC for controlling an LED.
+class RobotControl(object):
+    """Define the service for streaming keyboard input
     """
 
     @staticmethod
-    def SetLED(request,
+    def SendKeyboardStream(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -101,11 +102,11 @@ class BlinkService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
+        return grpc.experimental.stream_unary(
+            request_iterator,
             target,
-            '/BlinkService/SetLED',
-            proto__gen_dot_blinky__pb2.SetLEDRequest.SerializeToString,
+            '/RobotControl/SendKeyboardStream',
+            proto__gen_dot_control__pb2.KeyInput.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -118,7 +119,7 @@ class BlinkService(object):
             _registered_method=True)
 
     @staticmethod
-    def IsOn(request,
+    def Move(request,
             target,
             options=(),
             channel_credentials=None,
@@ -131,9 +132,9 @@ class BlinkService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/BlinkService/IsOn',
-            proto__gen_dot_blinky__pb2.IsOnRequest.SerializeToString,
-            proto__gen_dot_blinky__pb2.IsOnResponse.FromString,
+            '/RobotControl/Move',
+            proto__gen_dot_control__pb2.MoveRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
