@@ -1,4 +1,3 @@
-// robot control https://github.com/Marcus-Forte/grpc-robot
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";

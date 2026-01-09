@@ -17,8 +17,8 @@ async def main():
     args.add_argument(
         "--llm",
         type=str,
-        default="google",
-        help="Select LLM backend: 'ollama' or 'google'",
+        default="openai",
+        help="Select LLM backend: 'ollama', 'google', or 'openai'",
     )
     args.add_argument(
         "--ollama_model",
@@ -31,6 +31,11 @@ async def main():
         type=str,
         help="Prompt to send to the LLM",
     )
+    args.add_argument(
+        "--speech-to-text",
+        action="store_true",
+        help="Use microphone speech input instead of typing",
+    )
 
     # Call load_dotenv() to load the environment variables from the .env file
     load_dotenv()
@@ -41,7 +46,7 @@ async def main():
     if parsed_args.llm == "ollama":
         print("Using Ollama LLM. Make sure Ollama server is running (ollama serve).")
         llm = ChatOllama(
-            model=parsed_args.ollama_model, base_url="http://localhost:11434", reasoning=False
+            model=parsed_args.ollama_model, base_url="http://192.168.3.188:11434", reasoning=False,
         )
         # llm.extract_reasoning = True  # Remove thinking
     elif parsed_args.llm == "google":
@@ -50,9 +55,22 @@ async def main():
         )
         llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite")
     elif parsed_args.llm == "openai":
-        llm = ChatOpenAI(model="o4-mini")
+        llm = ChatOpenAI(model="gpt-5-nano")
     else:
         raise ValueError("Invalid LLM backend specified. Use 'ollama' or 'google'.")
+
+    recognizer = None
+    microphone = None
+    if parsed_args.speech_to_text:
+        import speech_recognition as sr  # type: ignore
+
+        recognizer = sr.Recognizer()
+        try:
+            microphone = sr.Microphone()
+        except Exception as exc:  # noqa: PERF203
+            raise SystemExit(
+                "Microphone not available. Ensure PyAudio is installed and a default input device exists."
+            ) from exc
 
     # Use agent
     client = MCPClient.from_config_file("servers.json")
@@ -62,10 +80,10 @@ async def main():
         llm=llm,
         client=client,
         max_steps=20,
-        system_prompt="You are an helpful, but angry AI assistant"
-        "Use the tools provided to interact with the hardware, but do not be limited by them."
-        "No need to check if LED is on or off, just turn it on or off."
-        "Reply in the languagu`e the user requests.",
+        # system_prompt="You are an helpful, but angry AI assistant"
+        # "Use the tools provided to interact with the hardware, but do not be limited by them."
+        # "No need to check if LED is on or off, just turn it on or off."
+        # "Reply in the languagu`e the user requests.",
     )
 
     print(
@@ -83,10 +101,21 @@ async def main():
     # Interactive prompt
     if not parsed_args.prompt:
         while True:
-            user_input = input("YOU: ")
-            print("...")
+            if parsed_args.speech_to_text and recognizer and microphone:
+                try:
+                    with microphone as source:
+                        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                        print("Speak now...")
+                        audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
+                    user_input = recognizer.recognize_google(audio)
+                    print(f"YOU (voice): {user_input}")
+                except Exception as e:  # noqa: PERF203
+                    print(f"Speech capture failed: {e}")
+                    continue
+            else:
+                user_input = input("YOU: ")
+                print("...")
 
-            # Surely there is a better way to process outputs?
             try:
                 result = await agent.run(user_input)
                 print(result)
