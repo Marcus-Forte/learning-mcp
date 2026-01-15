@@ -26,6 +26,7 @@ async def main():
     sensor_channel = grpc.insecure_channel("192.168.3.251:50051")
     sensor_stub = SensorServiceStub(sensor_channel) 
 
+
      # Test Move
     # robot_stub.Move(MoveRequest(direction=MoveDirection.MOVE_FORWARD, duration=1.0))
 
@@ -51,7 +52,7 @@ async def main():
     @mcp.tool()
     def get_battery_level() -> str:
         request = AdcDataRequest(channel=0)
-        response = sensor_stub.GetAdc(request)
+        response = sensor_stub.getAdcData(request)
         return f"Battery level is {response.sample} Volts"
 
     print("Starting MCP server...")
