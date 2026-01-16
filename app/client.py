@@ -1,14 +1,16 @@
 import asyncio
-import mcp_use
 from langchain_ollama.chat_models import ChatOllama
-
+from langchain.agents import create_agent
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai.chat_models import ChatOpenAI
-
-
-from mcp_use import MCPAgent, MCPClient
+from langchain_core.messages import HumanMessage
 import argparse
 from dotenv import load_dotenv
+
+from .helpers import _extract_response_text
+
+mcp_servers = {"robot": {"transport": "streamable_http", "url": "http://localhost:8000/mcp"}}
 
 
 async def main():
@@ -40,13 +42,13 @@ async def main():
     # Call load_dotenv() to load the environment variables from the .env file
     load_dotenv()
 
-    mcp_use.set_debug(1)
-
     parsed_args = args.parse_args()
     if parsed_args.llm == "ollama":
         print("Using Ollama LLM. Make sure Ollama server is running (ollama serve).")
         llm = ChatOllama(
-            model=parsed_args.ollama_model, base_url="http://192.168.3.188:11434", reasoning=False,
+            model=parsed_args.ollama_model,
+            base_url="http://192.168.3.188:11434",
+            reasoning=False,
         )
         # llm.extract_reasoning = True  # Remove thinking
     elif parsed_args.llm == "google":
@@ -73,18 +75,11 @@ async def main():
             ) from exc
 
     # Use agent
-    client = MCPClient.from_config_file("servers.json")
+    client = MultiServerMCPClient(mcp_servers)
+    tools = await client.get_tools()
 
     # Wire the LLM to the client
-    agent = MCPAgent(
-        llm=llm,
-        client=client,
-        max_steps=20,
-        # system_prompt="You are an helpful, but angry AI assistant"
-        # "Use the tools provided to interact with the hardware, but do not be limited by them."
-        # "No need to check if LED is on or off, just turn it on or off."
-        # "Reply in the languagu`e the user requests.",
-    )
+    agent = create_agent(model=llm, tools=tools)
 
     print(
         "\033c## AI Agent Conected! ##\n",
@@ -98,6 +93,7 @@ async def main():
         model_name = llm.model
 
     print(f"Using Model: {model_name}")
+
     # Interactive prompt
     if not parsed_args.prompt:
         while True:
@@ -117,34 +113,33 @@ async def main():
                 print("...")
 
             try:
-                result = await agent.run(user_input)
-                print(result)
+                message = HumanMessage(
+                    content=[
+                        {"type": "text", "text": user_input},
+                    ]
+                )
+                result = await agent.ainvoke({"messages": [message]})
+                print(_extract_response_text(result))
             except Exception as e:
                 print(f"Error during agent run: {e}")
 
     # Give a single prompt to the agent
+    message = HumanMessage(
+        content=[
+            {"type": "text", "text": parsed_args.prompt},
+        ]
+    )
 
     try:
         # Agent Mode (Tools)
-        result = await agent.run(parsed_args.prompt)
+        result = await agent.ainvoke({"messages": [message]})
         print(
             "\n🔥 Result:",
-            result,
+            _extract_response_text(result),
         )
-
-        # Normal (no tools)
-        # result = llm.invoke(parsed_args.prompt).content
-        # print("\n🔥 Result:", result)
-
-        # Streamed prompt (no tools)
-        # for chunk in llm.stream(parsed_args.prompt):
-        #     print(chunk.content, end="", flush=True)
 
     except Exception as e:
         print(f"Error during agent run: {e}")
-
-    # Always clean up running MCP sessions
-    await client.close_all_sessions()
 
 
 if __name__ == "__main__":
