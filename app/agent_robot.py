@@ -9,10 +9,28 @@ from langchain_ollama.chat_models import ChatOllama
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_core.messages import HumanMessage
+from langchain_core.callbacks import BaseCallbackHandler
 
-from .helpers import _extract_response_text, _extract_image_base64_from_response
+from .helpers import _extract_image_base64_from_response
 
 mcp_servers = {"robot": {"transport": "streamable_http", "url": "http://localhost:8000/mcp"}}
+
+
+class StreamPrintCallback(BaseCallbackHandler):
+    """Print tokens as they are generated and log tool calls."""
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        print(token, end="", flush=True)
+
+    def on_tool_start(self, serialized, input_str: str, **kwargs) -> None:
+        tool_name = serialized.get("name") if isinstance(serialized, dict) else str(serialized)
+        print(f"\n\n🔧 Tool start: {tool_name} | input={input_str}")
+
+    def on_tool_end(self, output, **kwargs) -> None:
+        print(f"\n✅ Tool end")  # | output={output}")
+
+    def on_tool_error(self, error: Exception, **kwargs) -> None:
+        print(f"\n❌ Tool error: {error}")
 
 
 async def main():
@@ -40,21 +58,23 @@ async def main():
     load_dotenv()
 
     parsed_args = args.parse_args()
+
     if parsed_args.llm == "ollama":
         print("Using Ollama LLM. Make sure Ollama server is running (ollama serve).")
         llm = ChatOllama(
             model=parsed_args.ollama_model,
             base_url="http://192.168.3.188:11434",
             reasoning=False,
+            streaming=True,
         )
         # llm.extract_reasoning = True  # Remove thinking
     elif parsed_args.llm == "google":
         print(
             "Using Google Generative AI. Make sure you have set up the environment variables for Google API."
         )
-        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite")
+        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite", streaming=True)
     elif parsed_args.llm == "openai":
-        llm = ChatOpenAI(model="gpt-5-nano")
+        llm = ChatOpenAI(model="gpt-5-nano", streaming=True)
     else:
         raise ValueError("Invalid LLM backend specified. Use 'ollama' or 'google'.")
 
@@ -72,6 +92,8 @@ async def main():
         if not image_b64:
             raise RuntimeError("No image_base64 found in camera payload")
 
+        # Todo let parent agent control query?
+        query = "Describe the image"
         message = HumanMessage(
             content=[
                 {"type": "text", "text": query},
@@ -85,7 +107,7 @@ async def main():
         return getattr(response, "content", str(response))
 
     tools.append(describe_camera_frame)
-    agent = create_agent(model=llm, tools=tools, debug=True)
+    agent = create_agent(model=llm, tools=tools, debug=False)
 
     SYSTEM_RULES = """
     You control a real robot.
@@ -95,15 +117,9 @@ async def main():
     2) Then choose ONE action: move_forward, turn, or stop.
     3) Prefer small moves (<= 0.3m) and small turns (<= 30deg).
     4) If unsure or something looks unsafe, call stop.
-    5) If identical square tiles are detected in front of the robot stop the loop.
 
     Goal: navigate safely while following the user’s objective.
     """
-
-    messages = [
-        {"role": "system", "content": SYSTEM_RULES},
-        {"role": "user", "content": parsed_args.prompt},
-    ]
 
     print(
         "\033c## AI Agent Conected! ##\n",
@@ -119,22 +135,23 @@ async def main():
     print(f"Using Model: {model_name}")
 
     # Give a single prompt to the agent
-    try:
-        response = await agent.ainvoke({"messages": messages})
-        print(
-            "\n🔥 Result:",
-            _extract_response_text(response),
-        )
+    while True:
+        user_input = input("YOU: ")
+        print("...")
 
-    except Exception as e:
-        print(f"Error during agent run: {e}")
+        try:
+            messages = [
+                {"role": "system", "content": SYSTEM_RULES},
+                {"role": "user", "content": user_input},
+            ]
+            await agent.ainvoke(
+                {"messages": messages},
+                config={"callbacks": [StreamPrintCallback()]},
+            )
+            print("\n")
 
-    if hasattr(client, "aclose"):
-        await client.aclose()
-    elif hasattr(client, "close"):
-        close_result = client.close()
-        if asyncio.iscoroutine(close_result):
-            await close_result
+        except Exception as e:
+            print(f"Error during agent run: {e}")
 
 
 if __name__ == "__main__":

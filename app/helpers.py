@@ -26,16 +26,3 @@ def _extract_image_base64_from_response(response: object) -> str | None:
             return payload_obj["image_base64"]
 
     return None
-
-
-def _extract_response_text(response: object) -> str:
-    if isinstance(response, dict) and "messages" in response:
-        messages = response.get("messages") or []
-        if messages:
-            last = messages[-1]
-            if isinstance(last, BaseMessage):
-                return last.content
-            if isinstance(last, dict):
-                return str(last.get("content", last))
-            return str(last)
-    return str(response)
